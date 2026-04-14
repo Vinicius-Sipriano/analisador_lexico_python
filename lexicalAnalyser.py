@@ -138,8 +138,9 @@ def main():
     content = flags(argv)
     lexico = LexicalAnalyser(content).generate_token()
     print("\n-------------------|TOKENS|-------------------")
-    print("( TOKEN, LEXEMA, LINHA )")
+    print(f"{'Token':<15}{'Lexema':<20}{'Linha':<10}")
+    print("-" * 45)
     for token in lexico:
-        print(f"(  {token.code}  ,  {token.value}  ,  {token.line}  )")
+        print(f"{token.code:<15}{token.value:<20}{token.line:<10}")
 
 main()
