@@ -51,7 +51,8 @@ class LexicalAnalyser:
             ("TK_OPEN_BRACE", r"\{"),
             ("TK_CLOSE_BRACE", r"\}"),
             ("TK_COMMA", r","),
-            ("TK_NEW_LINE", r"\n"),
+            ("TK_NEW_LINE", r"\r?\n"),
+            ("TK_SPACE", r"[ \t]+"),
             ("TK_MISMATCH", r".")
         ]
 
@@ -69,7 +70,10 @@ class LexicalAnalyser:
             lexeme = matchedPattern.group()
             column = (matchedPattern.start() + 1) - col_start
             if tk_type == "TK_NUM":
-                lexeme = int(lexeme)
+                if "." in lexeme:
+                    lexeme = float(lexeme)
+                else:
+                    lexeme = int(lexeme)
             elif lexeme.upper() in self.__keywords1 and tk_type == "TK_ID":
                 if lexeme not in self.__keywords:
                     LexicalError(line, column, lexeme, "Identificador não pode ser igual a palavra reservada.")
@@ -77,6 +81,8 @@ class LexicalAnalyser:
             elif tk_type == "TK_NEW_LINE":
                 col_start = matchedPattern.end()
                 line += 1
+                continue
+            elif tk_type == "TK_SPACE":
                 continue
             elif tk_type == "TK_MISMATCH":
                 LexicalError(line, column, lexeme, "Token inválido.")
