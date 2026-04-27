@@ -36,6 +36,10 @@ class Tokens(Enum):
     TK_SPACE = 32
     TK_MISMATCH = 33
 
+  
+    TK_COMMENT_LINE = 34
+    TK_COMMENT_BLOCK = 35
+
 class LexicalError:
 
     def __init__(self, line, lex, mesg):
@@ -70,7 +74,7 @@ class LexicalAnalyser:
             (Tokens.TK_RETURN.name, r"return\b"),
             (Tokens.TK_PRINT.name, r"print\b"),
 
-            
+          
             (Tokens.TK_ID.name, r"[a-zA-Z][a-zA-Z0-9]{0,9}"),
 
             
@@ -136,6 +140,7 @@ class LexicalAnalyser:
 
             
             elif tk_type in ["TK_COMMENT_LINE", "TK_COMMENT_BLOCK"]:
+                yield Token(Tokens[tk_type].value, lexeme, line)
                 continue
 
             elif tk_type == Tokens.TK_NEW_LINE.name:
