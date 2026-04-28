@@ -36,6 +36,10 @@ class Tokens(Enum):
     TK_SPACE = 32
     TK_MISMATCH = 33
 
+  
+    TK_COMMENT_LINE = 34
+    TK_COMMENT_BLOCK = 35
+
 class LexicalError:
 
     def __init__(self, line, lex, mesg):
@@ -69,8 +73,17 @@ class LexicalAnalyser:
             (Tokens.TK_WHILE.name, r"while\b"),
             (Tokens.TK_RETURN.name, r"return\b"),
             (Tokens.TK_PRINT.name, r"print\b"),
-            (Tokens.TK_ID.name, r"[a-zA-Z_][a-zA-Z0-9_]*"),
-            (Tokens.TK_NUM.name, r"\d+(\.\d+)?"),
+
+          
+            (Tokens.TK_ID.name, r"[a-zA-Z][a-zA-Z0-9]{0,9}"),
+
+            
+            (Tokens.TK_NUM.name, r"\b(0|[1-9]\d{0,2})(\.\d{1,2})?\b"),
+
+            
+            ("TK_COMMENT_LINE", r"//.*"),
+            ("TK_COMMENT_BLOCK", r"/\*[\s\S]*?\*/"),
+
             (Tokens.TK_ATRIB.name, r"="),
             (Tokens.TK_PLUS.name, r"\+"),
             (Tokens.TK_MINUS.name, r"\-"),
@@ -115,18 +128,28 @@ class LexicalAnalyser:
         for matchedPattern in re.finditer(regex_rules, buffer):
             tk_type = matchedPattern.lastgroup
             lexeme = matchedPattern.group()
+
             if tk_type == Tokens.TK_NUM.name:
                 if "." in lexeme:
                     lexeme = float(lexeme)
                 else:
                     lexeme = int(lexeme)
+
             elif tk_type == Tokens.TK_ID.name and lexeme.lower() in self.__keywords_map:
-                    tk_type = self.__keywords_map[lexeme.lower()]
+                tk_type = self.__keywords_map[lexeme.lower()]
+
+            
+            elif tk_type in ["TK_COMMENT_LINE", "TK_COMMENT_BLOCK"]:
+                yield Token(Tokens[tk_type].value, lexeme, line)
+                continue
+
             elif tk_type == Tokens.TK_NEW_LINE.name:
                 line += 1
                 continue
+
             elif tk_type == Tokens.TK_SPACE.name:
                 continue
+
             elif tk_type == Tokens.TK_MISMATCH.name:
                 LexicalError(line, lexeme, "Token inválido.")
                 continue
