@@ -12,3 +12,9 @@ if (x >= 10) {
     }
     return;
 }
+
+// em linha
+
+/* em 
+bloco
+*/

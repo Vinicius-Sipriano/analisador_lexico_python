@@ -35,8 +35,7 @@ class Tokens(Enum):
     TK_NEW_LINE = 31
     TK_SPACE = 32
     TK_MISMATCH = 33
-
-  
+ 
     TK_COMMENT_LINE = 34
     TK_COMMENT_BLOCK = 35
 
@@ -73,17 +72,10 @@ class LexicalAnalyser:
             (Tokens.TK_WHILE.name, r"while\b"),
             (Tokens.TK_RETURN.name, r"return\b"),
             (Tokens.TK_PRINT.name, r"print\b"),
-
-          
-            (Tokens.TK_ID.name, r"[a-zA-Z][a-zA-Z0-9]{0,9}"),
-
-            
-            (Tokens.TK_NUM.name, r"\b(0|[1-9]\d{0,2})(\.\d{1,2})?\b"),
-
-            
-            ("TK_COMMENT_LINE", r"//.*"),
-            ("TK_COMMENT_BLOCK", r"/\*[\s\S]*?\*/"),
-
+            (Tokens.TK_ID.name, r"\b[a-zA-Z][a-zA-Z0-9]{0,9}\b"),
+            (Tokens.TK_NUM.name, r"\b(0|[1-9]\d{0,2})(\.\d{1,2})?\b"),          
+            (Tokens.TK_COMMENT_LINE.name, r"//.*"),
+            (Tokens.TK_COMMENT_BLOCK.name, r"/\*[\s\S]*?\*/"),
             (Tokens.TK_ATRIB.name, r"="),
             (Tokens.TK_PLUS.name, r"\+"),
             (Tokens.TK_MINUS.name, r"\-"),
@@ -104,7 +96,7 @@ class LexicalAnalyser:
             (Tokens.TK_PERIOD.name, r"\."),
             (Tokens.TK_NEW_LINE.name, r"\r?\n"),
             (Tokens.TK_SPACE.name, r"[ \t]+"),
-            (Tokens.TK_MISMATCH.name, r".")
+            (Tokens.TK_MISMATCH.name, r"[^ \t\r\n]+")
         ]
 
         self.__keywords_map = {
@@ -134,12 +126,8 @@ class LexicalAnalyser:
                     lexeme = float(lexeme)
                 else:
                     lexeme = int(lexeme)
-
-            elif tk_type == Tokens.TK_ID.name and lexeme.lower() in self.__keywords_map:
-                tk_type = self.__keywords_map[lexeme.lower()]
-
             
-            elif tk_type in ["TK_COMMENT_LINE", "TK_COMMENT_BLOCK"]:
+            elif tk_type in [Tokens.TK_COMMENT_LINE.name, Tokens.TK_COMMENT_BLOCK.name]:
                 yield Token(Tokens[tk_type].value, lexeme, line)
                 continue
 
