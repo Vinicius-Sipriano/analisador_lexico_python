@@ -3,7 +3,7 @@ from pathlib import Path
 def flags(argv):
 	if len(argv) < 2:
 		# Use default example file if no argument provided
-		source_path = Path("examples/example2.txt")
+		source_path = Path("examples/example.txt")
 	else:
 		source_path = Path(argv[1])
 

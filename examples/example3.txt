@@ -1,5 +1,5 @@
-int x;
-float y;
+int aaaaaaaaaaaa;
+float maçã;
 
 x = 10abc;
 y = x + 2.5;

@@ -1,3 +1,5 @@
+#EQUIPE: Artur Torquato Alves, Lucas Mello Carboni, Vinicius Ferreira Citadin, Vinicius Sipriano Vieira
+
 from sys import argv
 from receiveFlags import flags
 from typing import NamedTuple
