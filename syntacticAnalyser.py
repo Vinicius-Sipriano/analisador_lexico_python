@@ -302,6 +302,15 @@ def parse_source(source_code):
 def main():
     content = flags(argv)
 
+    tokens = list(LexicalAnalyser(content).generate_token())
+    
+    print("\n-------------------|TOKENS|-------------------")
+    print(f"{'Token':<15}{'Lexema':<20}{'Linha':<10}")
+    print("-" * 45)
+    for token in tokens:
+        if token.code not in COMMENT_TOKENS:
+            print(f"{token.code:<15}{token.value:<20}{token.line:<10}")
+
     try:
         parse_source(content)
     except ParseError as error:
