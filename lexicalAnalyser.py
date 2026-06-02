@@ -78,17 +78,17 @@ class LexicalAnalyser:
             (Tokens.TK_NUM.name, r"\b(0|[1-9]\d{0,2})(\.\d{1,2})?\b"),          
             (Tokens.TK_COMMENT_LINE.name, r"//.*"),
             (Tokens.TK_COMMENT_BLOCK.name, r"/\*[\s\S]*?\*/"),
+            (Tokens.TK_EQUALTY.name, r"\=="),
+            (Tokens.TK_INEQUALTY.name, r"\!="),
+            (Tokens.TK_LESS_OR_EQUAL.name, r"\<="),
+            (Tokens.TK_GREATER_OR_EQUAL.name, r"\>="),
             (Tokens.TK_ATRIB.name, r"="),
             (Tokens.TK_PLUS.name, r"\+"),
             (Tokens.TK_MINUS.name, r"\-"),
             (Tokens.TK_MULTIPLY.name, r"\*"),
             (Tokens.TK_DIVIDE.name, r"\/"),
-            (Tokens.TK_EQUALTY.name, r"\=="),
-            (Tokens.TK_INEQUALTY.name, r"\!="),
             (Tokens.TK_LESS.name, r"\<"),
             (Tokens.TK_GREATER.name, r"\>"),
-            (Tokens.TK_LESS_OR_EQUAL.name, r"\<="),
-            (Tokens.TK_GREATER_OR_EQUAL.name, r"\>="),
             (Tokens.TK_OPEN_PAREN.name, r"\("),
             (Tokens.TK_CLOSE_PAREN.name, r"\)"),
             (Tokens.TK_OPEN_BRACE.name, r"\{"),
@@ -156,4 +156,5 @@ def main():
     for token in lexico:
         print(f"{token.code:<15}{token.value:<20}{token.line:<10}")
 
-main()
+if __name__ == "__main__":
+    main()
