@@ -35,7 +35,7 @@ python lexicalAnalyser.py examples/example.txt
 O programa imprime os tokens encontrados no formato:
 
 ```txt
-( TOKEN, LEXEMA, LINHA, COLUNA )
+( TOKEN, LEXEMA, LINHA)
 ```
 
 Quando houver um caractere inválido ou um identificador inválido, o analisador exibe uma mensagem de erro léxico indicando linha e coluna.
@@ -57,6 +57,19 @@ python syntacticAnalyser.py examples/example.txt
 ```
 
 ### Saída esperada do sintático
+
+O programa imprime os tokens analisados no formato:
+
+```txt
+( TOKEN, LEXEMA, LINHA)
+```
+
+E ele mostra o processo da pilha a cada passo:
+
+```txt
+Pilha: [$ ...]
+Ação: ...
+```
 
 Se a sentença estiver correta, o analisador imprime:
 
