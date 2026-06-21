@@ -75,6 +75,9 @@ class LexicalAnalyser:
             (Tokens.TK_RETURN.name, r"return\b"),
             (Tokens.TK_PRINT.name, r"print\b"),
             (Tokens.TK_ID.name, r"\b[a-zA-Z][a-zA-Z0-9]{0,9}\b"),
+            ("TK_INVALID_NUM_MULTI", r"\b\d+(?:\.\d+){2,}\b"),
+            ("TK_INVALID_NUM_LEADING_DOT", r"\.\d+"),
+            ("TK_INVALID_NUM_TRAILING_DOT", r"\d+\.(?!\d)"),
             (Tokens.TK_NUM.name, r"\b(0|[1-9]\d{0,2})(\.\d{1,2})?\b"),          
             (Tokens.TK_COMMENT_LINE.name, r"//.*"),
             (Tokens.TK_COMMENT_BLOCK.name, r"/\*[\s\S]*?\*/"),
@@ -123,14 +126,24 @@ class LexicalAnalyser:
             tk_type = matchedPattern.lastgroup
             lexeme = matchedPattern.group()
 
+           
+            if tk_type not in Tokens.__members__:
+                LexicalError(line, lexeme, "Token inválido.")
+                continue
+
             if tk_type == Tokens.TK_NUM.name:
                 if "." in lexeme:
                     lexeme = float(lexeme)
                 else:
                     lexeme = int(lexeme)
             
-            elif tk_type in [Tokens.TK_COMMENT_LINE.name, Tokens.TK_COMMENT_BLOCK.name]:
-                yield Token(Tokens[tk_type].value, lexeme, line)
+            elif tk_type == Tokens.TK_COMMENT_LINE.name:
+                
+                continue
+
+            elif tk_type == Tokens.TK_COMMENT_BLOCK.name:
+                
+                line += lexeme.count('\n')
                 continue
 
             elif tk_type == Tokens.TK_NEW_LINE.name:
