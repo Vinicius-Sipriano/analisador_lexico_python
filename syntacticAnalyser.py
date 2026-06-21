@@ -3,7 +3,6 @@ from sys import argv
 from lexicalAnalyser import LexicalAnalyser, Token, Tokens
 from receiveFlags import flags
 
-# Códigos para não-terminais (usando apenas números)
 TK_PROGRAM = 100
 TK_FUNCTION_LIST = 101
 TK_FUNCTION_LIST_P = 102
@@ -231,10 +230,10 @@ def symbol_repr(symbol):
     """Converte um símbolo (terminal, não-terminal ou EOF) para representação legível"""
     if symbol == EOF:
         return "$"
-    elif symbol < 100:  # Terminal - código de token
+    elif symbol < 100:
         terminal_name = TERMINAL_NAMES.get(symbol, f"T{symbol}")
         return f"T{symbol}({terminal_name})"
-    else:  # Non-terminal
+    else:
         return f"N{symbol}"
 
 
@@ -294,7 +293,6 @@ class SyntacticAnalyser:
                     continue
                 self._error(["fim de arquivo"])
 
-            # Terminal (código de token: 1-35)
             if isinstance(top, int) and top < 100:
                 if top == current.code:
                     self._stack.pop()
@@ -306,7 +304,6 @@ class SyntacticAnalyser:
 
                 self._error([terminal_text(top)])
 
-            # Non-terminal (código >= 100)
             if isinstance(top, int) and top >= 100:
                 production_number = PARSING_TABLE.get(top, {}).get(current.code)
                 if production_number is None:
@@ -321,7 +318,6 @@ class SyntacticAnalyser:
                 self._print_step(f"REDUÇÃO: Produção {production_number}")
                 continue
             
-            # Se chegou aqui, há algo inesperado
             raise ParseError(f"Símbolo inválido na pilha: {top}")
 
         print("\n" + "="*50)
