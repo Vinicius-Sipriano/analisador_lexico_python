@@ -1,6 +1,7 @@
 from sys import argv
 
 from lexicalAnalyser import LexicalAnalyser, Token, Tokens
+from semanticAnalyser import SemanticAnalyser
 from receiveFlags import flags
 
 TK_PROGRAM = 100
@@ -230,6 +231,8 @@ def symbol_repr(symbol):
     """Converte um símbolo (terminal, não-terminal ou EOF) para representação legível"""
     if symbol == EOF:
         return "$"
+    elif isinstance(symbol, str):
+        return symbol
     elif symbol < 100:
         terminal_name = TERMINAL_NAMES.get(symbol, f"T{symbol}")
         return f"T{symbol}({terminal_name})"
@@ -257,6 +260,7 @@ class SyntacticAnalyser:
         self._position = 0
         self._stack = [EOF, TK_PROGRAM]
         self._step = 0
+        self.semantic = SemanticAnalyser()
 
     def _current(self):
         return self._tokens[self._position]
@@ -285,6 +289,21 @@ class SyntacticAnalyser:
             top = self._stack[-1]
             current = self._current()
 
+            if isinstance(top, str) and top.startswith("#"):
+                self._stack.pop()
+                            
+                if top == "#ACAO_DECL_FUNCAO":
+
+                    token_id = self._tokens[self._position - 2]
+                    token_type = self._tokens[self._position - 3]
+                                
+                    self.semantic.registrar_funcao(
+                        nome=token_id.value, 
+                        tipo=token_type.value, 
+                        linha=token_id.line
+                        )
+                continue
+
             if top == EOF:
                 if current.code == EOF:
                     self._stack.pop()
@@ -311,6 +330,16 @@ class SyntacticAnalyser:
                     self._error(expected if expected else [str(top)])
 
                 self._stack.pop()
+
+                if production_number == 5:
+                    self._stack.append(TK_BLOCK)
+                    self._stack.append(Tokens.TK_CLOSE_PAREN.value)
+                    self._stack.append(TK_PARAM_LIST_OPT)
+                    self._stack.append(Tokens.TK_OPEN_PAREN.value)
+                    self._stack.append("#ACAO_DECL_FUNCAO")
+                    self._stack.append(Tokens.TK_ID.value)
+                    self._stack.append(TK_TYPE)
+
                 for symbol in reversed(production_text(production_number)):
                     self._stack.append(symbol)
                 
