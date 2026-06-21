@@ -297,7 +297,7 @@ class SyntacticAnalyser:
                     token_id = self._tokens[self._position - 2]
                     token_type = self._tokens[self._position - 3]
                                 
-                    self.semantic.registrar_funcao(
+                    self.semantic.register_function(
                         nome=token_id.value, 
                         tipo=token_type.value, 
                         linha=token_id.line
@@ -339,9 +339,9 @@ class SyntacticAnalyser:
                     self._stack.append("#ACAO_DECL_FUNCAO")
                     self._stack.append(Tokens.TK_ID.value)
                     self._stack.append(TK_TYPE)
-
-                for symbol in reversed(production_text(production_number)):
-                    self._stack.append(symbol)
+                else:
+                    for symbol in reversed(production_text(production_number)):
+                        self._stack.append(symbol)
                 
                 self._step += 1
                 self._print_step(f"REDUÇÃO: Produção {production_number}")
