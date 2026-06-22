@@ -1,0 +1,7 @@
+float foo(int a) {
+    return a;
+}
+
+float bar() {
+    return foo();
+}

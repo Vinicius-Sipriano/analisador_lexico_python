@@ -84,6 +84,13 @@ Erro sintático (error de parser) em:
 ParseError: Linha X: esperado ..., encontrado '...'
 ```
 
+## Validação semântica
+
+Além da análise sintática, o projeto também verifica chamadas de função:
+
+- o número de argumentos fornecidos deve corresponder ao número de parâmetros definidos na declaração da função
+- se houver divergência, o programa exibe um erro semântico indicando a chamada inválida
+
 ## Observação sobre os exemplos
 
 - [examples/example.txt](examples/example.txt) é útil para testar o léxico, mas não pertence à gramática sintática atual

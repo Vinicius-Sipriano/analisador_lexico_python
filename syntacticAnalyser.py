@@ -43,6 +43,12 @@ TK_ARG_LIST_P = 135
 TK_TYPE = 136
 
 
+TYPE_TOKENS = {
+    Tokens.TK_INT.value,
+    Tokens.TK_FLOAT.value,
+}
+
+
 EOF = 0
 COMMENT_TOKENS = {
     Tokens.TK_COMMENT_LINE.value,
@@ -250,6 +256,138 @@ class ParseError(Exception):
     pass
 
 
+class SemanticError(Exception):
+    pass
+
+
+def _is_type_token(token_code):
+    return token_code in TYPE_TOKENS
+
+
+def _count_parenthesized_items(tokens, start_index):
+    depth = 1
+    count = 0
+    has_item = False
+    index = start_index
+
+    while index < len(tokens):
+        token = tokens[index]
+
+        if token.code == Tokens.TK_OPEN_PAREN.value:
+            depth += 1
+            has_item = True
+        elif token.code == Tokens.TK_CLOSE_PAREN.value:
+            depth -= 1
+            if depth == 0:
+                if not has_item:
+                    return 0, index
+                return count + 1, index
+        elif token.code == Tokens.TK_COMMA.value and depth == 1:
+            count += 1
+            has_item = False
+        else:
+            has_item = True
+
+        index += 1
+
+    raise SemanticError("Chamada de função incompleta.")
+
+
+def _collect_function_signatures(tokens):
+    signatures = {}
+    brace_depth = 0
+    index = 0
+
+    while index < len(tokens):
+        token = tokens[index]
+
+        if token.code == Tokens.TK_OPEN_BRACE.value:
+            brace_depth += 1
+            index += 1
+            continue
+
+        if token.code == Tokens.TK_CLOSE_BRACE.value:
+            brace_depth = max(0, brace_depth - 1)
+            index += 1
+            continue
+
+        if (
+            brace_depth == 0
+            and _is_type_token(token.code)
+            and index + 2 < len(tokens)
+            and tokens[index + 1].code == Tokens.TK_ID.value
+            and tokens[index + 2].code == Tokens.TK_OPEN_PAREN.value
+        ):
+            function_name = tokens[index + 1].value
+            parameter_count, closing_index = _count_parenthesized_items(tokens, index + 3)
+            signatures[function_name] = parameter_count
+            index = closing_index + 1
+            continue
+
+        index += 1
+
+    return signatures
+
+
+def _validate_function_calls(tokens, signatures):
+    brace_depth = 0
+    index = 0
+
+    while index < len(tokens):
+        token = tokens[index]
+
+        if token.code == Tokens.TK_OPEN_BRACE.value:
+            brace_depth += 1
+            index += 1
+            continue
+
+        if token.code == Tokens.TK_CLOSE_BRACE.value:
+            brace_depth = max(0, brace_depth - 1)
+            index += 1
+            continue
+
+        is_function_definition = (
+            brace_depth == 0
+            and _is_type_token(token.code)
+            and index + 2 < len(tokens)
+            and tokens[index + 1].code == Tokens.TK_ID.value
+            and tokens[index + 2].code == Tokens.TK_OPEN_PAREN.value
+        )
+
+        if is_function_definition:
+            _, closing_index = _count_parenthesized_items(tokens, index + 3)
+            index = closing_index + 1
+            continue
+
+        if (
+            token.code == Tokens.TK_ID.value
+            and index + 1 < len(tokens)
+            and tokens[index + 1].code == Tokens.TK_OPEN_PAREN.value
+        ):
+            function_name = token.value
+            expected_count = signatures.get(function_name)
+
+            if expected_count is None:
+                raise SemanticError(f"Função '{function_name}' não declarada.")
+
+            actual_count, closing_index = _count_parenthesized_items(tokens, index + 2)
+            if actual_count != expected_count:
+                raise SemanticError(
+                    f"Número diferente de parâmetros na chamada de '{function_name}': "
+                    f"esperado {expected_count}, encontrado {actual_count}."
+                )
+
+            index = closing_index + 1
+            continue
+
+        index += 1
+
+
+def validate_semantics(tokens):
+    signatures = _collect_function_signatures(tokens)
+    _validate_function_calls(tokens, signatures)
+
+
 class SyntacticAnalyser:
     def __init__(self, tokens):
         filtered_tokens = [token for token in tokens if token.code not in COMMENT_TOKENS]
@@ -324,14 +462,16 @@ class SyntacticAnalyser:
             # Se chegou aqui, há algo inesperado
             raise ParseError(f"Símbolo inválido na pilha: {top}")
 
-        print("\n" + "="*50)
-        print("✓ Sentença ACEITA!")
-        print("="*50)
         return True
 
 
 def parse_tokens(tokens):
-    return SyntacticAnalyser(tokens).parse()
+    result = SyntacticAnalyser(tokens).parse()
+    validate_semantics(tokens)
+    print("\n" + "="*50)
+    print("✓ Sentença ACEITA!")
+    print("="*50)
+    return result
 
 
 def parse_source(source_code):
@@ -352,9 +492,11 @@ def main():
             print(f"{token.code:<15}{token.value:<20}{token.line:<10}")
 
     try:
-        parse_source(content)
+        parse_tokens(tokens)
     except ParseError as error:
         print(f"Erro sintático (error de parser) em:\n{type(error).__name__}: {error}")
+    except SemanticError as error:
+        print(f"Erro semântico em:\n{type(error).__name__}: {error}")
 
 
 if __name__ == "__main__":
