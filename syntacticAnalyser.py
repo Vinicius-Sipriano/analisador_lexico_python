@@ -1,7 +1,7 @@
 from sys import argv
 
 from lexicalAnalyser import LexicalAnalyser, Token, Tokens
-from semanticAnalyser import SemanticAnalyser
+from semanticAnalyser import SemanticAnalyser, SemanticError
 from receiveFlags import flags
 
 TK_PROGRAM = 100
@@ -294,13 +294,13 @@ class SyntacticAnalyser:
                             
                 if top == "#ACAO_DECL_FUNCAO":
 
-                    token_id = self._tokens[self._position - 2]
-                    token_type = self._tokens[self._position - 3]
+                    token_id = self._tokens[self._position - 1]
+                    token_type = self._tokens[self._position - 2]
                                 
                     self.semantic.register_function(
-                        nome=token_id.value, 
-                        tipo=token_type.value, 
-                        linha=token_id.line
+                        name=token_id.value, 
+                        idType=token_type.value, 
+                        line=token_id.line
                         )
                 continue
 
@@ -376,11 +376,17 @@ def main():
         if token.code not in COMMENT_TOKENS:
             print(f"{token.code:<15}{token.value:<20}{token.line:<10}")
 
+    syntactic_analyser = SyntacticAnalyser(tokens)
+
     try:
-        parse_source(content)
+        syntactic_analyser.parse()
+        print("\n" + "="*20 + " RELATÓRIO SEMÂNTICO FINAL " + "="*20)
+        syntactic_analyser.semantic.show_symbol_table()
+
     except ParseError as error:
         print(f"Erro sintático (error de parser) em:\n{type(error).__name__}: {error}")
-
+    except SemanticError as error:
+        print(f"Erro semântico em:\n{type(error).__name__}: {error}")
 
 if __name__ == "__main__":
     main()
