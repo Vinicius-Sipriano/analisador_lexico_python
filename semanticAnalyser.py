@@ -13,11 +13,13 @@ class SemanticAnalyser:
             'name': scope_name,
             'symbols': {}
         })
+        self.show_symbol_table()
 
     def exit_scope(self):
         if not self.scopes:
             raise SemanticError("Escopo inválido: tentativa de sair de um escopo inexistente.")
         self.scopes.pop()
+        self.show_symbol_table()
 
     def current_scope(self):
         return self.scopes[-1] if self.scopes else None
@@ -26,6 +28,7 @@ class SemanticAnalyser:
         for scope in reversed(self.scopes):
             if name in scope['symbols']:
                 return scope['symbols'][name]
+        self.show_symbol_table()
         return self.symbol_table.get(name)
 
     def register_function(self, name, idType, line):
@@ -76,6 +79,7 @@ class SemanticAnalyser:
             'categoria': 'parâmetro',
             'escopo': current['name']
         })
+        self.show_symbol_table()
 
     def register_variable(self, name, idType, line):
         current = self.current_scope()
@@ -101,6 +105,7 @@ class SemanticAnalyser:
             'categoria': 'variável',
             'escopo': current['name']
         })
+        self.show_symbol_table()
 
     def get_symbol_type(self, name, line):
         symbol = self.lookup(name)
@@ -108,6 +113,7 @@ class SemanticAnalyser:
             raise SemanticError(
                 f"Linha {line}: identificador '{name}' não foi declarado."
             )
+        self.show_symbol_table()
         return symbol.get('tipo') or symbol.get('tipo_retorno')
 
     def check_assignment(self, name, expr_type, line):
@@ -117,6 +123,7 @@ class SemanticAnalyser:
                 f"Linha {line}: tipo incompatível na atribuição para '{name}'. "
                 f"Esperado '{declared_type}', encontrado '{expr_type}'."
             )
+        self.show_symbol_table()
 
     def check_return(self, expr_type, line):
         if not self.current_function_stack:
@@ -130,12 +137,14 @@ class SemanticAnalyser:
                 f"Linha {line}: tipo de retorno incompatível para a função "
                 f"'{current_function}'. Esperado '{expected_type}', encontrado '{expr_type}'."
             )
+        self.show_symbol_table()
 
     def end_function(self):
         if not self.current_function_stack:
             raise SemanticError("Interno: tentativa de finalizar função inexistente.")
         self.current_function_stack.pop()
         self.exit_scope()
+        self.show_symbol_table()
 
     def types_compatible(self, source_type, target_type):
         if source_type == target_type:
