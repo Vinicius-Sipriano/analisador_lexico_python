@@ -1,9 +1,9 @@
 from sys import argv
 
 from lexicalAnalyser import LexicalAnalyser, Token, Tokens
+from semanticAnalyser import SemanticAnalyser, SemanticError
 from receiveFlags import flags
 
-# Códigos para não-terminais (usando apenas números)
 TK_PROGRAM = 100
 TK_FUNCTION_LIST = 101
 TK_FUNCTION_LIST_P = 102
@@ -85,20 +85,20 @@ PRODUCTIONS = [
     [TK_FUNCTION, TK_FUNCTION_LIST_P],
     [TK_FUNCTION, TK_FUNCTION_LIST_P],
     [],
-    [TK_TYPE, Tokens.TK_ID.value, Tokens.TK_OPEN_PAREN.value, TK_PARAM_LIST_OPT, Tokens.TK_CLOSE_PAREN.value, TK_BLOCK],
+    [TK_TYPE, Tokens.TK_ID.value, "#ACAO_DECL_FUNCAO", Tokens.TK_OPEN_PAREN.value, TK_PARAM_LIST_OPT, Tokens.TK_CLOSE_PAREN.value, TK_BLOCK, "#ACAO_END_FUNCTION"],
     [TK_PARAM_LIST],
     [],
     [TK_PARAM, TK_PARAM_LIST_P],
     [Tokens.TK_COMMA.value, TK_PARAM, TK_PARAM_LIST_P],
     [],
-    [TK_TYPE, Tokens.TK_ID.value],
+    [TK_TYPE, Tokens.TK_ID.value, "#ACAO_DECL_PARAM"],
     [Tokens.TK_OPEN_BRACE.value, TK_DECL_LIST_OPT, TK_STMT_LIST_OPT, Tokens.TK_CLOSE_BRACE.value],
     [TK_DECL_LIST],
     [],
     [TK_VAR_DECL, TK_DECL_LIST_P],
     [TK_VAR_DECL, TK_DECL_LIST_P],
     [],
-    [TK_TYPE, Tokens.TK_ID.value, Tokens.TK_SEMICOLON.value],
+    [TK_TYPE, Tokens.TK_ID.value, "#ACAO_DECL_VAR", Tokens.TK_SEMICOLON.value],
     [TK_STMT_LIST],
     [],
     [TK_STMT, TK_STMT_LIST_P],
@@ -110,41 +110,41 @@ PRODUCTIONS = [
     [TK_PRINT_STMT],
     [TK_RETURN_STMT],
     [TK_BLOCK],
-    [Tokens.TK_ID.value, Tokens.TK_ATRIB.value, TK_EXPR, Tokens.TK_SEMICOLON.value],
-    [Tokens.TK_RETURN.value, TK_EXPR, Tokens.TK_SEMICOLON.value],
+    [Tokens.TK_ID.value, Tokens.TK_ATRIB.value, TK_EXPR, "#ACAO_ASSIGN", Tokens.TK_SEMICOLON.value],
+    [Tokens.TK_RETURN.value, TK_EXPR, "#ACAO_RETURN", Tokens.TK_SEMICOLON.value],
     [Tokens.TK_PRINT.value, Tokens.TK_OPEN_PAREN.value, TK_EXPR, Tokens.TK_CLOSE_PAREN.value, Tokens.TK_SEMICOLON.value],
     [Tokens.TK_IF.value, Tokens.TK_OPEN_PAREN.value, TK_EXPR, Tokens.TK_CLOSE_PAREN.value, TK_STMT, TK_ELSE_PART],
     [Tokens.TK_ELSE.value, TK_STMT],
     [],
     [Tokens.TK_WHILE.value, Tokens.TK_OPEN_PAREN.value, TK_EXPR, Tokens.TK_CLOSE_PAREN.value, TK_STMT],
     [TK_REL_EXPR],
-    [TK_ADD_EXPR, TK_REL_EXPR_P],
-    [TK_REL_OP, TK_ADD_EXPR],
-    [],
+    [TK_ADD_EXPR, TK_REL_EXPR_P, "#ACAO_REL_EXPR"],
+    [TK_REL_OP, TK_ADD_EXPR, "#ACAO_REL_EXPR_P"],
+    ["#ACAO_EMPTY_REL_EXPR_P"],
     [Tokens.TK_EQUALTY.value],
     [Tokens.TK_INEQUALTY.value],
     [Tokens.TK_LESS.value],
     [Tokens.TK_GREATER.value],
     [Tokens.TK_LESS_OR_EQUAL.value],
     [Tokens.TK_GREATER_OR_EQUAL.value],
-    [TK_MUL_EXPR, TK_ADD_EXPR_P],
-    [Tokens.TK_PLUS.value, TK_MUL_EXPR, TK_ADD_EXPR_P],
-    [Tokens.TK_MINUS.value, TK_MUL_EXPR, TK_ADD_EXPR_P],
-    [],
-    [TK_FACTOR, TK_MUL_EXPR_P],
-    [Tokens.TK_MULTIPLY.value, TK_FACTOR, TK_MUL_EXPR_P],
-    [Tokens.TK_DIVIDE.value, TK_FACTOR, TK_MUL_EXPR_P],
-    [],
+    [TK_MUL_EXPR, TK_ADD_EXPR_P, "#ACAO_ADD_EXPR"],
+    [Tokens.TK_PLUS.value, TK_MUL_EXPR, TK_ADD_EXPR_P, "#ACAO_ADD_EXPR_P"],
+    [Tokens.TK_MINUS.value, TK_MUL_EXPR, TK_ADD_EXPR_P, "#ACAO_ADD_EXPR_P_MINUS"],
+    ["#ACAO_EMPTY_ADD_EXPR_P"],
+    [TK_FACTOR, TK_MUL_EXPR_P, "#ACAO_MUL_EXPR"],
+    [Tokens.TK_MULTIPLY.value, TK_FACTOR, TK_MUL_EXPR_P, "#ACAO_MUL_EXPR_P"],
+    [Tokens.TK_DIVIDE.value, TK_FACTOR, TK_MUL_EXPR_P, "#ACAO_MUL_EXPR_P_DIV"],
+    ["#ACAO_EMPTY_MUL_EXPR_P"],
     [Tokens.TK_OPEN_PAREN.value, TK_EXPR, Tokens.TK_CLOSE_PAREN.value],
-    [Tokens.TK_ID.value, TK_FACTOR_TAIL],
+    [Tokens.TK_ID.value, TK_FACTOR_TAIL, "#ACAO_FACTOR_ID"],
     [Tokens.TK_NUM.value],
-    [Tokens.TK_OPEN_PAREN.value, TK_ARG_LIST_OPT, Tokens.TK_CLOSE_PAREN.value],
+    [Tokens.TK_OPEN_PAREN.value, TK_ARG_LIST_OPT, Tokens.TK_CLOSE_PAREN.value, "#ACAO_CALL_ARGS"],
     [],
     [TK_ARG_LIST],
     [],
-    [TK_EXPR, TK_ARG_LIST_P],
-    [Tokens.TK_COMMA.value, TK_EXPR, TK_ARG_LIST_P],
-    [],
+    [TK_EXPR, TK_ARG_LIST_P, "#ACAO_BUILD_ARG_LIST"],
+    [Tokens.TK_COMMA.value, TK_EXPR, TK_ARG_LIST_P, "#ACAO_APPEND_ARG_LIST"],
+    ["#ACAO_EMPTY_ARGS"],
     [Tokens.TK_INT.value],
     [Tokens.TK_FLOAT.value],
 ]
@@ -231,10 +231,12 @@ def symbol_repr(symbol):
     """Converte um símbolo (terminal, não-terminal ou EOF) para representação legível"""
     if symbol == EOF:
         return "$"
-    elif symbol < 100:  # Terminal - código de token
+    elif isinstance(symbol, str):
+        return symbol
+    elif symbol < 100:
         terminal_name = TERMINAL_NAMES.get(symbol, f"T{symbol}")
         return f"T{symbol}({terminal_name})"
-    else:  # Non-terminal
+    else:
         return f"N{symbol}"
 
 
@@ -258,6 +260,8 @@ class SyntacticAnalyser:
         self._position = 0
         self._stack = [EOF, TK_PROGRAM]
         self._step = 0
+        self._semantic_stack = []
+        self.semantic = SemanticAnalyser()
 
     def _current(self):
         return self._tokens[self._position]
@@ -279,12 +283,316 @@ class SyntacticAnalyser:
         if action:
             print(f"Ação: {action}")
 
+    def _push_terminal_semantic(self, token):
+        if token.code == Tokens.TK_ID.value:
+            self._semantic_stack.append({
+                'kind': 'identifier',
+                'name': token.value,
+                'line': token.line
+            })
+        elif token.code == Tokens.TK_NUM.value:
+            self._semantic_stack.append({
+                'kind': 'expr',
+                'type': 'float' if isinstance(token.value, float) else 'int',
+                'line': token.line
+            })
+        elif token.code == Tokens.TK_INT.value:
+            self._semantic_stack.append({
+                'kind': 'type',
+                'type': 'int',
+                'line': token.line
+            })
+        elif token.code == Tokens.TK_FLOAT.value:
+            self._semantic_stack.append({
+                'kind': 'type',
+                'type': 'float',
+                'line': token.line
+            })
+        elif token.code in {
+            Tokens.TK_PLUS.value,
+            Tokens.TK_MINUS.value,
+            Tokens.TK_MULTIPLY.value,
+            Tokens.TK_DIVIDE.value,
+            Tokens.TK_EQUALTY.value,
+            Tokens.TK_INEQUALTY.value,
+            Tokens.TK_LESS.value,
+            Tokens.TK_GREATER.value,
+            Tokens.TK_LESS_OR_EQUAL.value,
+            Tokens.TK_GREATER_OR_EQUAL.value,
+        }:
+            self._semantic_stack.append({
+                'kind': 'operator',
+                'symbol': token.value,
+                'line': token.line
+            })
+
+    def _execute_semantic_action(self, action):
+        if action == "#ACAO_DECL_FUNCAO":
+            token_id = self._tokens[self._position - 1]
+            token_type = self._tokens[self._position - 2]
+            self.semantic.register_function(
+                name=token_id.value,
+                idType=token_type.value,
+                line=token_id.line
+            )
+            return
+
+        if action == "#ACAO_END_FUNCTION":
+            self.semantic.end_function()
+            return
+
+        if action == "#ACAO_ENTER_BLOCK":
+            self.semantic.enter_scope("block")
+            return
+
+        if action == "#ACAO_EXIT_BLOCK":
+            self.semantic.exit_scope()
+            return
+
+        if action == "#ACAO_DECL_PARAM":
+            identifier = self._semantic_stack.pop()
+            typ = self._semantic_stack.pop()
+            self.semantic.register_param(
+                name=identifier['name'],
+                idType=typ['type'],
+                line=identifier['line']
+            )
+            return
+
+        if action == "#ACAO_DECL_VAR":
+            identifier = self._semantic_stack.pop()
+            typ = self._semantic_stack.pop()
+            self.semantic.register_variable(
+                name=identifier['name'],
+                idType=typ['type'],
+                line=identifier['line']
+            )
+            return
+
+        if action == "#ACAO_ASSIGN":
+            expr = self._semantic_stack.pop()
+            identifier = self._semantic_stack.pop()
+            self.semantic.check_assignment(
+                name=identifier['name'],
+                expr_type=expr['type'],
+                line=identifier['line']
+            )
+            return
+
+        if action == "#ACAO_RETURN":
+            expr = self._semantic_stack.pop()
+            self.semantic.check_return(
+                expr_type=expr['type'],
+                line=expr['line']
+            )
+            return
+
+        if action == "#ACAO_EMPTY_MUL_EXPR_P":
+            self._semantic_stack.append({
+                'kind': 'op_list',
+                'items': []
+            })
+            return
+
+        if action == "#ACAO_MUL_EXPR_P":
+            tail = self._semantic_stack.pop()
+            factor = self._semantic_stack.pop()
+            operator = self._semantic_stack.pop()
+            items = [{'op': '*', 'type': factor['type'], 'line': factor['line']}]
+            items.extend(tail['items'])
+            self._semantic_stack.append({
+                'kind': 'op_list',
+                'items': items
+            })
+            return
+
+        if action == "#ACAO_MUL_EXPR_P_DIV":
+            tail = self._semantic_stack.pop()
+            factor = self._semantic_stack.pop()
+            operator = self._semantic_stack.pop()
+            items = [{'op': '/', 'type': factor['type'], 'line': factor['line']}]
+            items.extend(tail['items'])
+            self._semantic_stack.append({
+                'kind': 'op_list',
+                'items': items
+            })
+            return
+
+        if action == "#ACAO_MUL_EXPR":
+            tail = self._semantic_stack.pop()
+            factor = self._semantic_stack.pop()
+            result_type = factor['type']
+            for item in tail['items']:
+                result_type = self.semantic.evaluate_arithmetic(
+                    result_type,
+                    item['type'],
+                    item['op'],
+                    item['line']
+                )
+            self._semantic_stack.append({
+                'kind': 'expr',
+                'type': result_type,
+                'line': factor['line']
+            })
+            return
+
+        if action == "#ACAO_EMPTY_ADD_EXPR_P":
+            self._semantic_stack.append({
+                'kind': 'op_list',
+                'items': []
+            })
+            return
+
+        if action == "#ACAO_ADD_EXPR_P":
+            tail = self._semantic_stack.pop()
+            mul_expr = self._semantic_stack.pop()
+            operator = self._semantic_stack.pop()
+            items = [{'op': '+', 'type': mul_expr['type'], 'line': mul_expr['line']}]
+            items.extend(tail['items'])
+            self._semantic_stack.append({
+                'kind': 'op_list',
+                'items': items
+            })
+            return
+
+        if action == "#ACAO_ADD_EXPR_P_MINUS":
+            tail = self._semantic_stack.pop()
+            mul_expr = self._semantic_stack.pop()
+            operator = self._semantic_stack.pop()
+            items = [{'op': '-', 'type': mul_expr['type'], 'line': mul_expr['line']}]
+            items.extend(tail['items'])
+            self._semantic_stack.append({
+                'kind': 'op_list',
+                'items': items
+            })
+            return
+
+        if action == "#ACAO_ADD_EXPR":
+            tail = self._semantic_stack.pop()
+            mul_expr = self._semantic_stack.pop()
+            result_type = mul_expr['type']
+            for item in tail['items']:
+                result_type = self.semantic.evaluate_arithmetic(
+                    result_type,
+                    item['type'],
+                    item['op'],
+                    item['line']
+                )
+            self._semantic_stack.append({
+                'kind': 'expr',
+                'type': result_type,
+                'line': mul_expr['line']
+            })
+            return
+
+        if action == "#ACAO_EMPTY_REL_EXPR_P":
+            self._semantic_stack.append({
+                'kind': 'rel_tail',
+                'operator': None,
+                'rhs_type': None,
+                'line': None
+            })
+            return
+
+        if action == "#ACAO_REL_EXPR_P":
+            add_expr = self._semantic_stack.pop()
+            op = self._semantic_stack.pop()
+            self._semantic_stack.append({
+                'kind': 'rel_tail',
+                'operator': op['symbol'],
+                'rhs_type': add_expr['type'],
+                'line': op['line']
+            })
+            return
+
+        if action == "#ACAO_REL_EXPR":
+            rel_tail = self._semantic_stack.pop()
+            add_expr = self._semantic_stack.pop()
+            if rel_tail['operator'] is None:
+                self._semantic_stack.append(add_expr)
+                return
+            result_type = self.semantic.evaluate_relational(
+                add_expr['type'],
+                rel_tail['rhs_type'],
+                rel_tail['operator'],
+                rel_tail['line']
+            )
+            self._semantic_stack.append({
+                'kind': 'expr',
+                'type': result_type,
+                'line': add_expr['line']
+            })
+            return
+
+        if action == "#ACAO_EMPTY_ARGS":
+            self._semantic_stack.append({
+                'kind': 'args',
+                'types': []
+            })
+            return
+
+        if action == "#ACAO_BUILD_ARG_LIST":
+            arg_tail = self._semantic_stack.pop()
+            expr = self._semantic_stack.pop()
+            self._semantic_stack.append({
+                'kind': 'args',
+                'types': [expr['type']] + arg_tail['types']
+            })
+            return
+
+        if action == "#ACAO_APPEND_ARG_LIST":
+            arg_tail = self._semantic_stack.pop()
+            expr = self._semantic_stack.pop()
+            self._semantic_stack.append({
+                'kind': 'args',
+                'types': [expr['type']] + arg_tail['types']
+            })
+            return
+
+        if action == "#ACAO_CALL_ARGS":
+            if self._semantic_stack and self._semantic_stack[-1]['kind'] == 'args':
+                args = self._semantic_stack.pop()
+            else:
+                args = {'kind': 'args', 'types': []}
+            self._semantic_stack.append(args)
+            return
+
+        if action == "#ACAO_FACTOR_ID":
+            tail = None
+            if self._semantic_stack and self._semantic_stack[-1]['kind'] == 'args':
+                tail = self._semantic_stack.pop()
+            identifier = self._semantic_stack.pop()
+            if tail:
+                func_type = self.semantic.get_symbol_type(identifier['name'], identifier['line'])
+                self._semantic_stack.append({
+                    'kind': 'expr',
+                    'type': func_type,
+                    'line': identifier['line']
+                })
+                return
+            expr_type = self.semantic.get_symbol_type(identifier['name'], identifier['line'])
+            self._semantic_stack.append({
+                'kind': 'expr',
+                'type': expr_type,
+                'line': identifier['line']
+            })
+            return
+
+        raise ParseError(f"Ação semântica desconhecida: {action}")
+
     def parse(self):
         self._print_step("INÍCIO")
         
         while self._stack:
             top = self._stack[-1]
             current = self._current()
+
+            if isinstance(top, str) and top.startswith("#"):
+                self._stack.pop()
+                self._execute_semantic_action(top)
+                self._step += 1
+                self._print_step(f"AÇÃO SEMÂNTICA: {top}")
+                continue
 
             if top == EOF:
                 if current.code == EOF:
@@ -294,10 +602,10 @@ class SyntacticAnalyser:
                     continue
                 self._error(["fim de arquivo"])
 
-            # Terminal (código de token: 1-35)
             if isinstance(top, int) and top < 100:
                 if top == current.code:
                     self._stack.pop()
+                    self._push_terminal_semantic(current)
                     self._position += 1
                     self._step += 1
                     terminal_name = terminal_text(top)
@@ -306,7 +614,6 @@ class SyntacticAnalyser:
 
                 self._error([terminal_text(top)])
 
-            # Non-terminal (código >= 100)
             if isinstance(top, int) and top >= 100:
                 production_number = PARSING_TABLE.get(top, {}).get(current.code)
                 if production_number is None:
@@ -316,12 +623,10 @@ class SyntacticAnalyser:
                 self._stack.pop()
                 for symbol in reversed(production_text(production_number)):
                     self._stack.append(symbol)
-                
                 self._step += 1
                 self._print_step(f"REDUÇÃO: Produção {production_number}")
                 continue
             
-            # Se chegou aqui, há algo inesperado
             raise ParseError(f"Símbolo inválido na pilha: {top}")
 
         print("\n" + "="*50)
@@ -351,11 +656,17 @@ def main():
         if token.code not in COMMENT_TOKENS:
             print(f"{token.code:<15}{token.value:<20}{token.line:<10}")
 
+    syntactic_analyser = SyntacticAnalyser(tokens)
+
     try:
-        parse_source(content)
+        syntactic_analyser.parse()
+        print("\n" + "="*20 + " RELATÓRIO SEMÂNTICO FINAL " + "="*20)
+        syntactic_analyser.semantic.show_symbol_table()
+
     except ParseError as error:
         print(f"Erro sintático (error de parser) em:\n{type(error).__name__}: {error}")
-
+    except SemanticError as error:
+        print(f"Erro semântico em:\n{type(error).__name__}: {error}")
 
 if __name__ == "__main__":
     main()
