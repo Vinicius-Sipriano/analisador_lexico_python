@@ -1,9 +1,10 @@
 # Analisador Léxico e Sintático em Python
 
-Este projeto implementa dois componentes da frente de compilação:
+Este projeto implementa três componentes da frente de compilação:
 
 - um analisador léxico para reconhecer os tokens da linguagem
 - um analisador sintático LL(1) para validar a gramática codificada na tabela de parsing
+- um analisador semântico para validar as ações semânticas da linguagem
 
 ## Requisitos
 
@@ -13,7 +14,8 @@ Este projeto implementa dois componentes da frente de compilação:
 
 - [lexicalAnalyser.py](lexicalAnalyser.py) faz a análise léxica e gera os tokens
 - [syntacticAnalyser.py](syntacticAnalyser.py) consome os tokens do léxico e executa a análise sintática
-- [examples/](examples/) contém arquivos de teste para os dois analisadores
+- [semanticAnalyser.py](semanticAnalyser.py) faz a análise semântica através das ações semânticas
+- [examples/](examples/) contém arquivos de teste para os três analisadores
 
 ## Analisador Léxico
 
@@ -84,12 +86,29 @@ Erro sintático (error de parser) em:
 ParseError: Linha X: esperado ..., encontrado '...'
 ```
 
-## Validação semântica
+## Analisador Semântico
 
-Além da análise sintática, o projeto também verifica chamadas de função:
+O semântico foi implementado usando uma tabela de símbolos
 
-- o número de argumentos fornecidos deve corresponder ao número de parâmetros definidos na declaração da função
-- se houver divergência, o programa exibe um erro semântico indicando a chamada inválida
+### Como executar o semântico
+
+```bash
+python syntacticAnalyser.py examples/example.txt
+```
+
+O semântico é executado através do syntacticAnalyser, sendo o semanticAnalyser para apoio ao código principal.
+
+### Saída esperada do semântico
+
+Ele atualiza a tabela de símbolos a cada mudança feita nela.
+
+--- TABELA DE SÍMBOLOS MODIFICADA ---
+Funções:
+  Função:   | Tipo Retorno:   | Linha: 
+Identificadores declarados:
+  Função    :        | Tipo:     | Escopo:   | Linha: 
+  Variável  :        | Tipo:     | Escopo:   | Linha:  
+-------------------------------------
 
 ## Observação sobre os exemplos
 
